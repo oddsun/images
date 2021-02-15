@@ -10,8 +10,10 @@ num_outlines = 10
 size = 90
 
 i = 0
-fp = '~/PycharmProjects/images/output/autogen_{}.png'
+fp = '~/wallpapers/autogen_{}.png'
 fp = os.path.expanduser(fp)
+if not os.path.exists(os.path.dirname(fp)):
+    os.makedirs(os.path.dirname(fp))
 while os.path.exists(fp.format(i)):
     i += 1
 print(fp.format(i))
