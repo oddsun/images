@@ -2,15 +2,22 @@
 from PIL import Image, ImageDraw
 import numpy
 import os
+import sys
 
-width = 1920 * 2
+multiplier = 2
+fp = '~/wallpapers/autogen_{}.png'
+
+if len(sys.argv) > 1 and sys.argv[1] == 'w':
+    multiplier = 4
+    fp = '~/wallpapers_wide/autogen_{}.png'
+
+width = 1920 * multiplier
 height = 1080 * 2
 num_circle = 30
 num_outlines = 10
 size = 90
 
 i = 0
-fp = '~/wallpapers/autogen_{}.png'
 fp = os.path.expanduser(fp)
 if not os.path.exists(os.path.dirname(fp)):
     os.makedirs(os.path.dirname(fp))
