@@ -1,6 +1,7 @@
-# images
+# useful & fun image utils
 
-Randomly generates simple wallpapers
+- `circles.py`: Randomly generates simple wallpapers
+- `join_wallpapers.py`: joins wallpaper horizontally for widescreen
 
 # install
 
@@ -8,7 +9,9 @@ Randomly generates simple wallpapers
 pip install -r requirements.txt
 ```
 
-# running
+# `circles.py`
+
+## running
 
 ```
 chmod u+x circles.py
@@ -16,8 +19,23 @@ chmod u+x run.sh
 ./run.sh
 ```
 
-# saving location
+For dual-screen wide wallpaper, pass `w` argument
+`./run.sh w`
 
-```buildoutcfg
+## saving location
+
+regular:
+
+```
 ~/wallpapers/autogen_#.png
 ```
+
+wide:
+
+```
+~/wallpapers_wide/autogen_#.png
+```
+
+# `join_wallpapers.py`
+
+work-in-progress, will add GUI
