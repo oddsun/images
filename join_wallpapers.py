@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 import os
 from typing import Iterable
 
@@ -27,7 +27,8 @@ def fn_gen(name: str = 'wallpaper_{}.png', dp: str = '~/wallpapers_wide/combined
 
 def horizontal_join(image_lst: Iterable = None, image_fns: Iterable = None, dp: str = '~/Downloads',
                     dp_out: str = '~/wallpapers_wide/combined',
-                    name: str = 'combined', fixed_height: int = 1440) -> None:
+                    name: str = 'combined', fixed_height: int = 1440,
+                    smooth_width: int = 0, blend_alpha: float = 0) -> None:
     """
     horizontally join list of images in the order given
 
@@ -37,6 +38,9 @@ def horizontal_join(image_lst: Iterable = None, image_fns: Iterable = None, dp: 
     :param dp_out: directory path of output files
     :param name: name of output image, will auto add numerical postfix to if name already exists
     :param fixed_height: height of output image
+    :param smooth_width: width of smoothing at joining edges in pixels; uses blending if blend_alpha != 0 then blur
+                        twice the width to cover blending
+    :param blend_alpha: alpha of blending at joining edges; 0 means no blending, 1 means the mirror is pasted (weird!)
     :return: None
     """
     dp = os.path.expanduser(dp)
@@ -64,8 +68,31 @@ def horizontal_join(image_lst: Iterable = None, image_fns: Iterable = None, dp: 
         new_im.paste(im, (x_offset, 0))
         x_offset += im.size[0]
 
-    fp = fn_gen(name=name + '_{}.png', dp=dp_out)
+    if blend_alpha:
+        new_im_blend = new_im.copy()
+        x_offset = 0
+        for im in resized_images:
+            x_offset += im.size[0]
+            strip = (x_offset - smooth_width, 0, x_offset + smooth_width, fixed_height)
+            cropped_strip = new_im.crop(strip)
+            cropped_strip_mirrored = ImageOps.mirror(cropped_strip)
+            new_im_blend.paste(cropped_strip_mirrored, strip)
+        new_im = Image.blend(new_im, new_im_blend, alpha=blend_alpha)
+        smooth_width *= 2
 
+    # will blur to cover blending if blended
+    if smooth_width:
+        x_offset = 0
+        for im in resized_images:
+            x_offset += im.size[0]
+            strip = (x_offset - smooth_width, 0, x_offset + smooth_width, fixed_height)
+            cropped_strip = new_im.crop(strip)
+            cropped_strip_smoothed = cropped_strip.filter(ImageFilter.GaussianBlur(radius=min(smooth_width // 2, 5)))
+            # cropped_strip_smoothed = cropped_strip.filter(ImageFilter.MedianFilter(size=smooth_width * 2 + 1))
+            new_im.paste(cropped_strip_smoothed, strip)
+
+    fp = fn_gen(name=name + '_{}.png', dp=dp_out)
+    print(fp)
     new_im.save(fp)
 
 
@@ -112,4 +139,15 @@ if __name__ == '__main__':
     # fixed_height = 1440
     #
     # image_fns = ['joel-protasio-LZ9LTA83o-o-unsplash.jpg', 'pawel-czerwinski-z7prq6BtPE4-unsplash.jpg']
-    self_join_mirrored('joel-protasio-LZ9LTA83o-o-unsplash.jpg')
+    # self_join_mirrored('pawel-czerwinski-z7prq6BtPE4-unsplash.jpg', side='left')
+    # image_fns = ['mike-yukhtenko-MDzJF3o8Ajk-unsplash.jpg',
+    #              'tesson-thaliath-T37GMvi5R7E-unsplash.jpg',
+    #              'parrish-freeman-1cAMinWGc3s-unsplash.jpg',
+    #              'zoltan-tasi-6CbDs4T_jZc-unsplash.jpg',
+    #              'hans-isaacson-ZqSDrFeAbCg-unsplash.jpg', ]
+    image_fns = ['xianyu-hao-vTSOYsCoM_Q-unsplash.jpg',
+                 'lean-xview-LH7-_hr5PbM-unsplash.jpg',
+                 'jez-timms-VivzPEYabew-unsplash.jpg',
+                 'wolfgang-hasselmann-NNt-9kdCf98-unsplash.jpg',
+                 'daniel-stone-QIAGXy53Rc8-unsplash.jpg', ]
+    horizontal_join(image_fns=image_fns, smooth_width=2, blend_alpha=0.5)
